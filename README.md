@@ -84,7 +84,7 @@ We love to get your input. Read more about our community contribution guidelines
 
 ## License
 
-By contributing to the Kitegateway WooCommerce Plugin, you agree that your contributions will be licensed under its [MIT license](/LICENSE).
+By contributing to the Kitegateway WooCommerce Plugin, you agree that your contributions will be licensed under its [GPLv2 or later](/LICENSE).
 
 Copyright (c) Kitegateway Inc.
 

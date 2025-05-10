@@ -61,20 +61,26 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         // Only enqueue on the Kitegateway settings page.
         $screen = get_current_screen();
-        if ( $screen && 'woocommerce_page_wc-settings' === $screen->id && isset( $_GET['section'] ) && 'kitegateway' === sanitize_text_field( wp_unslash( $_GET['section'] ) ) ) {
-            wp_enqueue_style(
-                'kitegateway-toggle',
-                plugins_url( '../assets/kitegateway-toggle.css', __FILE__ ),
-                array(),
-                '1.0.0'
-            );
-            wp_enqueue_script(
-                'kitegateway-toggle',
-                plugins_url( '../assets/kitegateway-toggle.js', __FILE__ ),
-                array( 'jquery' ),
-                '1.0.0',
-                true
-            );
+        if ( $screen && 'woocommerce_page_wc-settings' === $screen->id ) {
+            // Verify nonce for GET request
+            if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'kitegateway_admin_settings' ) ) {
+                return;
+            }
+            if ( isset( $_GET['section'] ) && 'kitegateway' === sanitize_text_field( wp_unslash( $_GET['section'] ) ) ) {
+                wp_enqueue_style(
+                    'kitegateway-toggle',
+                    plugins_url( '../assets/kitegateway-toggle.css', __FILE__ ),
+                    array(),
+                    '1.0.0'
+                );
+                wp_enqueue_script(
+                    'kitegateway-toggle',
+                    plugins_url( '../assets/kitegateway-toggle.js', __FILE__ ),
+                    array( 'jquery' ),
+                    '1.0.0',
+                    true
+                );
+            }
         }
     }
 
@@ -436,6 +442,14 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
      * @return array|string
      */
     private function kitegateway_payment_processing( $order ) {
+        // Verify nonce
+        if ( ! isset( $_POST['kitegateway_checkout_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kitegateway_checkout_nonce'] ) ), 'kitegateway_checkout_nonce' ) ) {
+            wc_add_notice( __( 'Payment error: Invalid request.', 'kitegateway-woocommerce' ), 'error' );
+            return array(
+                'result'   => 'failure',
+                'messages' => __( 'Invalid request.', 'kitegateway-woocommerce' ),
+            );
+        }
 
         $auth_url = 'https://kitegateway.com/v1/auth/token';
         $auth_response = wp_remote_post(
@@ -469,19 +483,31 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         if ( 200 === wp_remote_retrieve_response_code( $auth_response ) ) {
             $total = intval( $order->get_total() );
-            $card_number = esc_attr( $_POST['card_number'] );
-            $expiry_month = esc_attr( $_POST['expiry_month'] );
-            $expiry_year = esc_attr( $_POST['expiry_year'] );
-            $cvv = esc_attr( $_POST['cvv'] );
+
+            // Validate and sanitize POST data
+            $card_number = isset( $_POST['card_number'] ) ? sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) : '';
+            $expiry_month = isset( $_POST['expiry_month'] ) ? sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) : '';
+            $expiry_year = isset( $_POST['expiry_year'] ) ? sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) : '';
+            $cvv = isset( $_POST['cvv'] ) ? sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) : '';
+
+            // Check for missing fields
+            if ( empty( $card_number ) || empty( $expiry_month ) || empty( $expiry_year ) || empty( $cvv ) ) {
+                wc_add_notice( __( 'Payment error: Missing card details.', 'kitegateway-woocommerce' ), 'error' );
+                return array(
+                    'result'   => 'failure',
+                    'messages' => __( 'Missing card details.', 'kitegateway-woocommerce' ),
+                );
+            }
+
             $card_data = json_encode(array(
                 'full_name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
                 'card_number' => $card_number,
                 'expiry_month' => $expiry_month,
-                'expiry_year' => $expiry_year,
+                'expiry_year' => substr($expiry_year, -2), // Convert to 2-digit year
                 'cvv' => $cvv,
                 'billing_address' => $order->get_billing_address_1(),
                 'billing_city' => $order->get_billing_city(),
-                'billing_zip' => 'N/A',
+                'billing_zip' => "N/A",
                 'billing_state' => $order->get_billing_state(),
                 'billing_country' => $order->get_billing_country()
             ));
@@ -493,7 +519,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                 'payment_method' => 'CARD',
                 'phone_number' => $order->get_billing_phone(),
                 'account_number' => $order->get_billing_phone(),
-                'redirect_url' => $this->get_return_url( $order ),
+                'redirect_url' => add_query_arg( 'kitegateway_nonce', wp_create_nonce( 'kitegateway_thankyou' ), $this->get_return_url( $order ) ),
                 'merchant_reference' => $order->get_id()."-".preg_replace('~\d~', '', wp_generate_uuid4(), 8),
                 'narration' => 'Payment for order ' . $order->get_order_number(),
                 'account_name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
@@ -564,34 +590,53 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
             echo wp_kses_post( wpautop( wptexturize( $this->instructions ) ) );
         }
 
-        // Process query parameters
-        $query_params = array(
-            'transaction_id' => isset($_GET['id']) ? sanitize_text_field($_GET['id']) : '',
-            'merchant_reference' => isset($_GET['merchant_reference']) ? sanitize_text_field($_GET['merchant_reference']) : '',
-            'kitegateway_reference' => isset($_GET['kitegateway_reference']) ? sanitize_text_field($_GET['kitegateway_reference']) : '',
-            'order_id'       => isset($_GET['order_id']) ? absint($_GET['order_id']) : 0,
-            'status'            => isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '',
-            'message'            => isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '',
-            'signature'            => isset($_GET['signature']) ? sanitize_text_field($_GET['signature']) : '',
-        );
-
-        // Validate query parameters
-        if (empty($query_params['status'])) {
-            wc_get_logger()->debug('Kitegateway Thankyou: Missing payment status in query parameters', array('source' => 'kitegateway-woocommerce'));
+        // Verify nonce
+        if ( ! isset( $_GET['kitegateway_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['kitegateway_nonce'] ) ), 'kitegateway_thankyou' ) ) {
+            wc_get_logger()->error( 'Kitegateway Thankyou Error: Invalid nonce', array( 'source' => 'kitegateway-woocommerce' ) );
+            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-woocommerce' ), 'error' );
             return;
         }
 
-        $order_ids = explode("-", $query_params['merchant_reference']);
+        // Process query parameters
+        $query_params = array(
+            'transaction_id' => isset( $_GET['id'] ) ? sanitize_text_field( wp_unslash( $_GET['id'] ) ) : '',
+            'merchant_reference' => isset( $_GET['merchant_reference'] ) ? sanitize_text_field( wp_unslash( $_GET['merchant_reference'] ) ) : '',
+            'kitegateway_reference' => isset( $_GET['kitegateway_reference'] ) ? sanitize_text_field( wp_unslash( $_GET['kitegateway_reference'] ) ) : '',
+            'order_id'       => isset( $_GET['order_id'] ) ? absint( wp_unslash( $_GET['order_id'] ) ) : 0,
+            'status'            => isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '',
+            'message'            => isset( $_GET['message'] ) ? sanitize_text_field( wp_unslash( $_GET['message'] ) ) : '',
+            'signature'            => isset( $_GET['signature'] ) ? sanitize_text_field( wp_unslash( $_GET['signature'] ) ) : '',
+        );
+
+        // Validate query parameters
+        if ( empty( $query_params['status'] ) ) {
+            wc_get_logger()->debug(
+                'Kitegateway Thankyou: Missing payment status in query parameters: ' . wp_json_encode( $query_params ),
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
+            return;
+        }
+
+        $order_ids = explode( "-", $query_params['merchant_reference'] );
         $order_id = $order_ids[0];
 
-        wc_get_logger()->debug('Kitegateway Thankyou: Order ID from query parameters: ' . $order_id, array('source' => 'kitegateway-woocommerce'));
+        wc_get_logger()->debug(
+            'Kitegateway Thankyou: Order ID from query parameters: ' . $order_id,
+            array( 'source' => 'kitegateway-woocommerce' )
+        );
 
-         wc_get_logger()->debug('Kitegateway Thankyou: ID from query parameters: ' . $id, array('source' => 'kitegateway-woocommerce'));
+        wc_get_logger()->debug(
+            'Kitegateway Thankyou: ID from query parameters: ' . $id,
+            array( 'source' => 'kitegateway-woocommerce' )
+        );
 
         // Verify order_id and key
-        if ($order_id != $id) {
-            wc_get_logger()->error('Kitegateway Thankyou Error: Invalid order_id or key', array('source' => 'kitegateway-woocommerce'));
-            wc_add_notice(__('Invalid payment confirmation data.', 'kitegateway-woocommerce'), 'error');
+        if ( $order_id != $id ) {
+            wc_get_logger()->error(
+                'Kitegateway Thankyou Error: Invalid order_id or key',
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
+            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-woocommerce' ), 'error' );
             return;
         }
 
@@ -643,19 +688,24 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         $payload = json_decode($raw_data, true);
 
          // Log webhook payload
-        wc_get_logger()->debug('Kitegateway Webhook Payload: ' . print_r($payload, true), array('source' => 'kitegateway-woocommerce'));
+        wc_get_logger()->debug(
+            'Kitegateway Webhook Payload: ' . wp_json_encode( $payload ),
+            array( 'source' => 'kitegateway-woocommerce' )
+        );
 
         // Verify webhook signature using api_secret
-        $signature = base64_decode(isset($_SERVER['HTTP_KITEGATEWAY_SIGNATURE']) ? sanitize_text_field($_SERVER['HTTP_KITEGATEWAY_SIGNATURE']) : '');
+        $signature = base64_decode(
+            isset( $_SERVER['HTTP_KITEGATEWAY_SIGNATURE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_KITEGATEWAY_SIGNATURE'] ) ) : ''
+        );
     
         // Process payload
         $data = array(
-            'transaction_id' => isset($payload['id']) ? sanitize_text_field($payload['id']) : '',
-            'merchant_reference' => isset($payload['merchant_reference']) ? sanitize_text_field($payload['merchant_reference']) : '',
-            'kitegateway_reference' => isset($payload['kitegateway_reference']) ? sanitize_text_field($payload['kitegateway_reference']) : '',
+            'transaction_id' => isset( $payload['id'] ) ? sanitize_text_field( $payload['id'] ) : '',
+            'merchant_reference' => isset( $payload['merchant_reference'] ) ? sanitize_text_field( $payload['merchant_reference'] ) : '',
+            'kitegateway_reference' => isset( $payload['kitegateway_reference'] ) ? sanitize_text_field( $payload['kitegateway_reference'] ) : '',
             'order_id'       => $order_id,
-            'status'            => isset($payload['transaction_status']) ? sanitize_text_field($payload['transaction_status']) : '',
-            'message'            => isset($payload['message']) ? sanitize_text_field($payload['message']) : ''
+            'status'            => isset( $payload['transaction_status'] ) ? sanitize_text_field( $payload['transaction_status'] ) : '',
+            'message'            => isset( $payload['message'] ) ? sanitize_text_field( $payload['message'] ) : ''
         );
 
         $file = plugins_url('../assets/kitegateway.public.key.pem', __FILE__); 
@@ -665,11 +715,23 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
     
         
         if(openssl_verify($strPayload, $signature, $publicKey, OPENSSL_ALGO_SHA512)) {
-            wc_get_logger()->debug('Kitegateway Webhook: Signature verified successfully', array('source' => 'kitegateway-woocommerce'));
+            wc_get_logger()->debug(
+                'Kitegateway Webhook: Signature verified successfully',
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
         } else {
-            wc_get_logger()->error('Kitegateway Webhook Error: Invalid signature', array('source' => 'kitegateway-woocommerce'));
-            wc_get_logger()->debug('Kitegateway Webhook signature: ' . print_r($signature, true), array('source' => 'kitegateway-woocommerce'));
-            wc_get_logger()->debug('Kitegateway Webhook Payload: ' . print_r($strPayload, true), array('source' => 'kitegateway-woocommerce'));
+            wc_get_logger()->error(
+                'Kitegateway Webhook Error: Invalid signature',
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
+            wc_get_logger()->debug(
+                'Kitegateway Webhook signature: ' . wp_json_encode( $signature ),
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
+            wc_get_logger()->debug(
+                'Kitegateway Webhook Payload: ' . wp_json_encode( $strPayload ),
+                array( 'source' => 'kitegateway-woocommerce' )
+            );
             status_header(401);
             wp_send_json(array('message' => 'Invalid webhook signature'));
             exit;
@@ -680,7 +742,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         // Validate payload
         if (!isset($order_id) || !isset($payload['transaction_status'])) {
-            wc_get_logger()->error('Kitegateway Webhook Error: Invalid payload', array('source' => 'kitegateway-woocommerce'));
+            wc_get_logger()->error(
+                'Kitegateway Webhook Error: Invalid payload',
+                array('source' => 'kitegateway-woocommerce')
+            );
             status_header(400);
             wp_send_json(array('message' => 'Invalid payload'));
             exit;
@@ -689,7 +754,15 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         $order = wc_get_order($order_id);
 
         if (!$order) {
-            wc_get_logger()->error("Kitegateway $source Error: Order not found for ID $order_id", array('source' => 'kitegateway-woocommerce'));
+            wc_get_logger()->error(
+                sprintf(
+                    /* translators: %1$s: source (Webhook or Redirect), %2$d: order ID */
+                    __( 'Kitegateway %1$s Error: Order not found for ID %2$d', 'kitegateway-woocommerce' ),
+                    'Webhook',
+                    $order_id
+                ),
+                array('source' => 'kitegateway-woocommerce')
+            );
             status_header(400);
             wp_send_json(array('message' => 'Invalid order'));
             exit;

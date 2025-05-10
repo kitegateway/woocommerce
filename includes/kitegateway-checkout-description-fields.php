@@ -23,8 +23,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
     ob_start();
 
     echo '<div style="display: block; width:300px; height:auto;">';
-    // echo '<img src="' . esc_url( plugins_url( '../assets/icon.png', __FILE__ ) ) . '">';
-
+    
     wp_nonce_field( 'kitegateway_checkout_nonce', 'kitegateway_checkout_nonce' );
 
     woocommerce_form_field(
@@ -83,7 +82,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
             'maxlength'   => 4,
             'custom_attributes' => array(
                 'autocomplete' => 'cc-exp-year',
-                'pattern'      => '[0-9]{2}',
+                'pattern'      => '[0-9]{4}',
                 'placeholder'  => 'YYYY',
             ),
         )
@@ -96,7 +95,6 @@ function kitegateway_description_fields( $description, $payment_id ) {
     return $description;
 }
 
-
 /**
  * Validate Kitegateway checkout fields.
  */
@@ -107,35 +105,41 @@ function kitegateway_description_fields_validation() {
     }
 
     if ( isset( $_POST['payment_method'] ) && 'kitegateway' === sanitize_text_field( wp_unslash( $_POST['payment_method'] ) ) ) {
+        // Sanitize inputs
+        $card_number = isset( $_POST['card_number'] ) ? sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) : '';
+        $cvv = isset( $_POST['cvv'] ) ? sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) : '';
+        $expiry_month = isset( $_POST['expiry_month'] ) ? sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) : '';
+        $expiry_year = isset( $_POST['expiry_year'] ) ? sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) : '';
+
         // Validate card number
-        if ( ! isset( $_POST['card_number'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) ) ) ) {
+        if ( empty( trim( $card_number ) ) ) {
             wc_add_notice( __( 'Please enter a valid card number.', 'kitegateway-woocommerce' ), 'error' );
-        } elseif ( ! preg_match( '/^[0-9]{13,19}$/', sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) ) ) {
+        } elseif ( ! preg_match( '/^[0-9]{13,19}$/', $card_number ) ) {
             wc_add_notice( __( 'Card number must be 13 to 19 digits.', 'kitegateway-woocommerce' ), 'error' );
         }
 
         // Validate CVV
-        if ( ! isset( $_POST['cvv'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) ) ) ) {
+        if ( empty( trim( $cvv ) ) ) {
             wc_add_notice( __( 'Please enter a valid CVV.', 'kitegateway-woocommerce' ), 'error' );
-        } elseif ( ! preg_match( '/^[0-9]{3,4}$/', sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) ) ) {
+        } elseif ( ! preg_match( '/^[0-9]{3,4}$/', $cvv ) ) {
             wc_add_notice( __( 'CVV must be 3 or 4 digits.', 'kitegateway-woocommerce' ), 'error' );
         }
 
         // Validate expiry month
-        if ( ! isset( $_POST['expiry_month'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) ) ) ) {
+        if ( empty( trim( $expiry_month ) ) ) {
             wc_add_notice( __( 'Please enter a valid expiry month.', 'kitegateway-woocommerce' ), 'error' );
-        } elseif ( ! preg_match( '/^(0[1-9]|1[0-2])$/', sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) ) ) {
+        } elseif ( ! preg_match( '/^(0[1-9]|1[0-2])$/', $expiry_month ) ) {
             wc_add_notice( __( 'Expiry month must be between 01 and 12.', 'kitegateway-woocommerce' ), 'error' );
         }
 
         // Validate expiry year
-        if ( ! isset( $_POST['expiry_year'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) ) ) ) {
+        if ( empty( trim( $expiry_year ) ) ) {
             wc_add_notice( __( 'Please enter a valid expiry year.', 'kitegateway-woocommerce' ), 'error' );
-        } elseif ( ! preg_match( '/^[0-9]{2}$/', sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) ) ) {
-            wc_add_notice( __( 'Expiry year must be a 2-digit number.', 'kitegateway-woocommerce' ), 'error' );
+        } elseif ( ! preg_match( '/^[0-9]{4}$/', $expiry_year ) ) {
+            wc_add_notice( __( 'Expiry year must be a 4-digit number.', 'kitegateway-woocommerce' ), 'error' );
         } else {
-            $current_year = (int) date( 'y' );
-            $expiry_year = (int) sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) );
+            $current_year = (int) gmdate( 'Y' );
+            $expiry_year = (int) $expiry_year;
             if ( $expiry_year < $current_year ) {
                 wc_add_notice( __( 'Expiry year cannot be in the past.', 'kitegateway-woocommerce' ), 'error' );
             }
@@ -143,12 +147,28 @@ function kitegateway_description_fields_validation() {
     }
 }
 
+/**
+ * Update order meta with sanitized card details.
+ *
+ * @param int $order_id The order ID.
+ */
 function checkout_update_order_meta( $order_id ) {
-    if( isset( $_POST['card_number'] ) || ! empty( $_POST['card_number'] ) ) {
-        update_post_meta( $order_id, 'card_number', $_POST['card_number'] );
+    // Verify nonce
+    if ( ! isset( $_POST['kitegateway_checkout_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kitegateway_checkout_nonce'] ) ), 'kitegateway_checkout_nonce' ) ) {
+        return;
     }
 
-    if( isset( $_POST['cvv'] ) || ! empty( $_POST['cvv'] ) ) {
-        update_post_meta( $order_id, 'card_number', $_POST['card_number'] );
+    // Only process for Kitegateway payments
+    if ( isset( $_POST['payment_method'] ) && 'kitegateway' === sanitize_text_field( wp_unslash( $_POST['payment_method'] ) ) ) {
+        $card_number = isset( $_POST['card_number'] ) ? sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) : '';
+        $cvv = isset( $_POST['cvv'] ) ? sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) : '';
+
+        if ( ! empty( trim( $card_number ) ) ) {
+            update_post_meta( $order_id, '_kitegateway_card_number', $card_number );
+        }
+
+        if ( ! empty( trim( $cvv ) ) ) {
+            update_post_meta( $order_id, '_kitegateway_cvv', $cvv );
+        }
     }
 }
