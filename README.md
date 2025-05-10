@@ -1,5 +1,5 @@
 <p align="center">
-    <img title="Kitegateway" height="100" src="https://kitegateway.com/home/img/logo.png" width="30%"/>
+    <img title="Kitegateway" height="100" src="https://kitegateway.com/home/img/logo.png" width="15%"/>
 </p>
 
 # Kitegateway WooCommerce
