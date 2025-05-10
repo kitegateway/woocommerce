@@ -5,7 +5,7 @@
  * Author: Kitegateway Developers
  * Author URI: https://github.com/kitegateway/woocommerce
  * Description: A fast and secure gateway for accepting digital payments in WooCommerce.
- * Version: 1.0.0
+ * Version: 1.0.1
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: kitegateway-for-woocommerce

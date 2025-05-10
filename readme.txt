@@ -3,7 +3,7 @@ Contributors: Kitegateway Developers
 Tags: payments, woocommerce, mobile-money, credit-card, kitegateway
 Requires at least: 3.1
 Tested up to: 6.8
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://github.com/kitegateway/woocommerce/blob/master/LICENSE
 
@@ -74,6 +74,9 @@ Contributions are licensed under the [GPLv2 or later](https://www.gnu.org/licens
 1. A [Kitegateway](https://kitegateway.com) account. Contact sales@kitegateway.com.
 
 == Changelog ==
+= 1.0.1 =
+* Modified slug to match wordpress standard.
+
 = 1.0.0 =
 * Initial release with support for credit/debit cards and mobile money payments.
 

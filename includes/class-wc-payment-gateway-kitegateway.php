@@ -6,7 +6,7 @@
  *
  * @class       WC_Gateway_Kitegateway
  * @extends     WC_Payment_Gateway
- * @version     1.0.0
+ * @version     1.0.1
  * @author      tech@kitegateway.com
  * @package     WooCommerce/Classes/Payment
  */
@@ -71,13 +71,13 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     'kitegateway-toggle',
                     plugins_url( '../assets/kitegateway-toggle.css', __FILE__ ),
                     array(),
-                    '1.0.0'
+                    '1.0.1'
                 );
                 wp_enqueue_script(
                     'kitegateway-toggle',
                     plugins_url( '../assets/kitegateway-toggle.js', __FILE__ ),
                     array( 'jquery' ),
-                    '1.0.0',
+                    '1.0.1',
                     true
                 );
             }
