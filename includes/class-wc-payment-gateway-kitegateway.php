@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Kitegateway Payments Gateway.
+ * Kitegateway Woocommerce.
  *
- * Provides a Kitegateway Payments Gateway.
+ * Provides a Kitegateway Woocommerce.
  *
  * @class       WC_Gateway_Kitegateway
  * @extends     WC_Payment_Gateway
@@ -53,10 +53,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
     protected function setup_properties() {
         $this->id                 = 'kitegateway';
         $this->icon               = apply_filters( 'woocommerce_kitegateway_icon', plugins_url('../assets/mastercard.png', __FILE__ ) );
-        $this->method_title       = __( 'Kitegateway Payments Gateway', 'kitegateway-payments-woo' );
+        $this->method_title       = __( 'Kitegateway Woocommerce', 'kitegateway-payments-woo' );
         $this->api_key            = __( 'Add API Key', 'kitegateway-payments-woo' );
         $this->api_secret         = __( 'Add Secret', 'kitegateway-payments-woo' );
-        $this->method_description = __( 'Have your customers pay with Kitegateway Payments Gateway.', 'kitegateway-payments-woo' );
+        $this->method_description = __( 'Have your customers pay with Kitegateway Woocommerce.', 'kitegateway-payments-woo' );
         $this->has_fields         = false;
     }
 
@@ -67,7 +67,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         $this->form_fields = array(
             'enabled'            => array(
                 'title'       => __( 'Enable/Disable', 'kitegateway-payments-woo' ),
-                'label'       => __( 'Enable Kitegateway Payments Gateway', 'kitegateway-payments-woo' ),
+                'label'       => __( 'Enable Kitegateway Woocommerce', 'kitegateway-payments-woo' ),
                 'type'        => 'checkbox',
                 'description' => '',
                 'default'     => 'no',
@@ -76,7 +76,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                 'title'       => __( 'Title', 'kitegateway-payments-woo' ),
                 'type'        => 'text',
                 'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your checkout.', 'kitegateway-payments-woo' ),
-                'default'     => __( 'Kitegateway Payments Gateway', 'kitegateway-payments-woo' ),
+                'default'     => __( 'Kitegateway Woocommerce', 'kitegateway-payments-woo' ),
                 'desc_tip'    => true,
             ),
             'api_key'             => array(
@@ -95,14 +95,14 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                 'title'       => __( 'Description', 'kitegateway-payments-woo' ),
                 'type'        => 'textarea',
                 'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your website.', 'kitegateway-payments-woo' ),
-                'default'     => __( 'Kitegateway Payments Gateway before delivery.', 'kitegateway-payments-woo' ),
+                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-payments-woo' ),
                 'desc_tip'    => true,
             ),
             'instructions'       => array(
                 'title'       => __( 'Instructions', 'kitegateway-payments-woo' ),
                 'type'        => 'textarea',
                 'description' => __( 'Instructions that will be added to the thank you page.', 'kitegateway-payments-woo' ),
-                'default'     => __( 'Kitegateway Payments Gateway before delivery.', 'kitegateway-payments-woo' ),
+                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-payments-woo' ),
                 'desc_tip'    => true,
             ),
             'enable_for_methods' => array(
@@ -211,7 +211,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
      */
     private function check_openssl_for_settings() {
         if (!extension_loaded('openssl')) {
-            $message = 'The OpenSSL PHP extension is not enabled. Please contact your hosting provider to enable it for the Kitegateway Payments Gateway to function correctly.';
+            $message = 'The OpenSSL PHP extension is not enabled. Please contact your hosting provider to enable it for the Kitegateway Woocommerce to function correctly.';
             $this->send_admin_notice($message, true);
             return;
         }
@@ -270,7 +270,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         if ($send_email) {
             $to = get_option('admin_email');
             $subject = __('Kitegateway Plugin Critical Error', 'kitegateway-payments-woo');
-            $body = __('An error occurred in the Kitegateway Payments Gateway plugin:', 'kitegateway-payments-woo') . "\n\n" . $message . "\n\n" .
+            $body = __('An error occurred in the Kitegateway Woocommerce plugin:', 'kitegateway-payments-woo') . "\n\n" . $message . "\n\n" .
                     __('Please address this issue promptly to ensure payment processing functionality.', 'kitegateway-payments-woo');
             $headers = array('Content-Type: text/plain; charset=UTF-8');
             wp_mail($to, $subject, $body, $headers);
