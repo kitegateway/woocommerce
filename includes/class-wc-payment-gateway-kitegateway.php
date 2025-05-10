@@ -90,10 +90,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
     protected function setup_properties() {
         $this->id                 = 'kitegateway';
         $this->icon               = apply_filters( 'woocommerce_kitegateway_icon', plugins_url('../assets/mastercard.png', __FILE__ ) );
-        $this->method_title       = __( 'Kitegateway Woocommerce', 'kitegateway-woocommerce' );
-        $this->api_key            = __( 'Add API Key', 'kitegateway-woocommerce' );
-        $this->api_secret         = __( 'Add Secret', 'kitegateway-woocommerce' );
-        $this->method_description = __( 'Have your customers pay with Kitegateway Woocommerce.', 'kitegateway-woocommerce' );
+        $this->method_title       = __( 'Kitegateway Woocommerce', 'kitegateway-for-woocommerce' );
+        $this->api_key            = __( 'Add API Key', 'kitegateway-for-woocommerce' );
+        $this->api_secret         = __( 'Add Secret', 'kitegateway-for-woocommerce' );
+        $this->method_description = __( 'Have your customers pay with Kitegateway Woocommerce.', 'kitegateway-for-woocommerce' );
         $this->has_fields         = false;
     }
 
@@ -103,64 +103,64 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
     public function init_form_fields() {
         $this->form_fields = array(
             'enabled'            => array(
-                'title'       => __( 'Enable/Disable', 'kitegateway-woocommerce' ),
-                'label'       => __( 'Enable Kitegateway Woocommerce', 'kitegateway-woocommerce' ),
+                'title'       => __( 'Enable/Disable', 'kitegateway-for-woocommerce' ),
+                'label'       => __( 'Enable Kitegateway Woocommerce', 'kitegateway-for-woocommerce' ),
                 'type'        => 'checkbox',
                 'description' => '',
                 'default'     => 'no',
             ),
             'title'              => array(
-                'title'       => __( 'Title', 'kitegateway-woocommerce' ),
+                'title'       => __( 'Title', 'kitegateway-for-woocommerce' ),
                 'type'        => 'text',
-                'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your checkout.', 'kitegateway-woocommerce' ),
-                'default'     => __( 'Kitegateway Woocommerce', 'kitegateway-woocommerce' ),
+                'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your checkout.', 'kitegateway-for-woocommerce' ),
+                'default'     => __( 'Kitegateway Woocommerce', 'kitegateway-for-woocommerce' ),
                 'desc_tip'    => true,
             ),
             'api_key'             => array(
-                'title'       => __( 'API Key', 'kitegateway-woocommerce' ),
+                'title'       => __( 'API Key', 'kitegateway-for-woocommerce' ),
                 'type'        => 'text',
-                'description' => __( 'Add your API key', 'kitegateway-woocommerce' ),
+                'description' => __( 'Add your API key', 'kitegateway-for-woocommerce' ),
                 'desc_tip'    => true,
             ),
             'api_secret'             => array(
-                'title'       => __( 'API Secret', 'kitegateway-woocommerce' ),
+                'title'       => __( 'API Secret', 'kitegateway-for-woocommerce' ),
                 'type'        => 'password',
-                'description' => __( 'Add your API Secret', 'kitegateway-woocommerce' ),
+                'description' => __( 'Add your API Secret', 'kitegateway-for-woocommerce' ),
                 'desc_tip'    => true,
                 'custom_attributes' => array(
                     'class' => 'kitegateway-api-secret',
                 ),
             ),
             'description'        => array(
-                'title'       => __( 'Description', 'kitegateway-woocommerce' ),
+                'title'       => __( 'Description', 'kitegateway-for-woocommerce' ),
                 'type'        => 'textarea',
-                'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your website.', 'kitegateway-woocommerce' ),
-                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-woocommerce' ),
+                'description' => __( 'Kitegateway Mobile Payment method description that the customer will see on your website.', 'kitegateway-for-woocommerce' ),
+                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-for-woocommerce' ),
                 'desc_tip'    => true,
             ),
             'instructions'       => array(
-                'title'       => __( 'Instructions', 'kitegateway-woocommerce' ),
+                'title'       => __( 'Instructions', 'kitegateway-for-woocommerce' ),
                 'type'        => 'textarea',
-                'description' => __( 'Instructions that will be added to the thank you page.', 'kitegateway-woocommerce' ),
-                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-woocommerce' ),
+                'description' => __( 'Instructions that will be added to the thank you page.', 'kitegateway-for-woocommerce' ),
+                'default'     => __( 'Kitegateway Woocommerce before delivery.', 'kitegateway-for-woocommerce' ),
                 'desc_tip'    => true,
             ),
             'enable_for_methods' => array(
-                'title'             => __( 'Enable for shipping methods', 'kitegateway-woocommerce' ),
+                'title'             => __( 'Enable for shipping methods', 'kitegateway-for-woocommerce' ),
                 'type'              => 'multiselect',
                 'class'             => 'wc-enhanced-select',
                 'css'               => 'width: 400px;',
                 'default'           => '',
-                'description'       => __( 'If kitegateway is only available for certain methods, set it up here. Leave blank to enable for all methods.', 'kitegateway-woocommerce' ),
+                'description'       => __( 'If kitegateway is only available for certain methods, set it up here. Leave blank to enable for all methods.', 'kitegateway-for-woocommerce' ),
                 'options'           => $this->load_shipping_method_options(),
                 'desc_tip'          => true,
                 'custom_attributes' => array(
-                    'data-placeholder' => __( 'Select shipping methods', 'kitegateway-woocommerce' ),
+                    'data-placeholder' => __( 'Select shipping methods', 'kitegateway-for-woocommerce' ),
                 ),
             ),
             'enable_for_virtual' => array(
-                'title'   => __( 'Accept for virtual orders', 'kitegateway-woocommerce' ),
-                'label'   => __( 'Accept kitegateway if the order is virtual', 'kitegateway-woocommerce' ),
+                'title'   => __( 'Accept for virtual orders', 'kitegateway-for-woocommerce' ),
+                'label'   => __( 'Accept kitegateway if the order is virtual', 'kitegateway-for-woocommerce' ),
                 'type'    => 'checkbox',
                 'default' => 'yes',
             ),
@@ -302,9 +302,9 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         // Send email to admin if requested
         if ($send_email) {
             $to = get_option('admin_email');
-            $subject = __('Kitegateway Plugin Critical Error', 'kitegateway-woocommerce');
-            $body = __('An error occurred in the Kitegateway Woocommerce plugin:', 'kitegateway-woocommerce') . "\n\n" . $message . "\n\n" .
-                    __('Please address this issue promptly to ensure payment processing functionality.', 'kitegateway-woocommerce');
+            $subject = __('Kitegateway Plugin Critical Error', 'kitegateway-for-woocommerce');
+            $body = __('An error occurred in the Kitegateway Woocommerce plugin:', 'kitegateway-for-woocommerce') . "\n\n" . $message . "\n\n" .
+                    __('Please address this issue promptly to ensure payment processing functionality.', 'kitegateway-for-woocommerce');
             $headers = array('Content-Type: text/plain; charset=UTF-8');
             wp_mail($to, $subject, $body, $headers);
         }
@@ -336,7 +336,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
             $options[ $method->get_method_title() ] = array();
 
             // Translators: %1$s shipping method name.
-            $options[ $method->get_method_title() ][ $method->id ] = sprintf( __( 'Any "%1$s" method', 'kitegateway-woocommerce' ), $method->get_method_title() );
+            $options[ $method->get_method_title() ][ $method->id ] = sprintf( __( 'Any "%1$s" method', 'kitegateway-for-woocommerce' ), $method->get_method_title() );
 
             foreach ( $zones as $zone ) {
 
@@ -351,10 +351,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     $option_id = $shipping_method_instance->get_rate_id();
 
                     // Translators: %1$s shipping method title, %2$s shipping method id.
-                    $option_instance_title = sprintf( __( '%1$s (#%2$s)', 'kitegateway-woocommerce' ), $shipping_method_instance->get_title(), $shipping_method_instance_id );
+                    $option_instance_title = sprintf( __( '%1$s (#%2$s)', 'kitegateway-for-woocommerce' ), $shipping_method_instance->get_title(), $shipping_method_instance_id );
 
                     // Translators: %1$s zone name, %2$s shipping method instance name.
-                    $option_title = sprintf( __( '%1$s – %2$s', 'kitegateway-woocommerce' ), $zone->get_id() ? $zone->get_zone_name() : __( 'Other locations', 'kitegateway-woocommerce' ), $option_instance_title );
+                    $option_title = sprintf( __( '%1$s – %2$s', 'kitegateway-for-woocommerce' ), $zone->get_id() ? $zone->get_zone_name() : __( 'Other locations', 'kitegateway-for-woocommerce' ), $option_instance_title );
 
                     $options[ $method->get_method_title() ][ $option_id ] = $option_title;
                 }
@@ -444,10 +444,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
     private function kitegateway_payment_processing( $order ) {
         // Verify nonce
         if ( ! isset( $_POST['kitegateway_checkout_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kitegateway_checkout_nonce'] ) ), 'kitegateway_checkout_nonce' ) ) {
-            wc_add_notice( __( 'Payment error: Invalid request.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Payment error: Invalid request.', 'kitegateway-for-woocommerce' ), 'error' );
             return array(
                 'result'   => 'failure',
-                'messages' => __( 'Invalid request.', 'kitegateway-woocommerce' ),
+                'messages' => __( 'Invalid request.', 'kitegateway-for-woocommerce' ),
             );
         }
 
@@ -468,13 +468,13 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         if ( is_wp_error( $auth_response ) ) {
             $auth_error_message = $auth_response->get_error_message();
-            wc_get_logger()->error( 'Kitegateway Payment Error: ' . $auth_error_message, array( 'source' => 'kitegateway-woocommerce' ) );
+            wc_get_logger()->error( 'Kitegateway Payment Error: ' . $auth_error_message, array( 'source' => 'kitegateway-for-woocommerce' ) );
 
             return "Something went wrong with auth: $auth_error_message";
         }
 
         if ( 200 !== wp_remote_retrieve_response_code( $auth_response ) ) {
-            // $order->update_status( apply_filters( 'woocommerce_kitegateway_process_payment_order_status', $order->has_downloadable_item() ? 'wc-invoiced' : 'processing', $order ), __( 'Payments pending.', 'kitegateway-woocommerce' ) );
+            // $order->update_status( apply_filters( 'woocommerce_kitegateway_process_payment_order_status', $order->has_downloadable_item() ? 'wc-invoiced' : 'processing', $order ), __( 'Payments pending.', 'kitegateway-for-woocommerce' ) );
         }
 
         $auth_response_body = json_decode( wp_remote_retrieve_body( $auth_response ) );
@@ -492,10 +492,10 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
             // Check for missing fields
             if ( empty( $card_number ) || empty( $expiry_month ) || empty( $expiry_year ) || empty( $cvv ) ) {
-                wc_add_notice( __( 'Payment error: Missing card details.', 'kitegateway-woocommerce' ), 'error' );
+                wc_add_notice( __( 'Payment error: Missing card details.', 'kitegateway-for-woocommerce' ), 'error' );
                 return array(
                     'result'   => 'failure',
-                    'messages' => __( 'Missing card details.', 'kitegateway-woocommerce' ),
+                    'messages' => __( 'Missing card details.', 'kitegateway-for-woocommerce' ),
                 );
             }
 
@@ -541,7 +541,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
             if ( is_wp_error( $collection_response ) ) {
                 $collection_error_message = $collection_response->get_error_message();
-                wc_get_logger()->error( 'Kitegateway Payment Error: ' . $collection_error_message, array( 'source' => 'kitegateway-woocommerce' ) );
+                wc_get_logger()->error( 'Kitegateway Payment Error: ' . $collection_error_message, array( 'source' => 'kitegateway-for-woocommerce' ) );
                 return "Something went wrong with auth: $collection_error_message";
             }
 
@@ -556,7 +556,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                 wc_add_notice(
                     sprintf(
                         /* translators: %s: error message from Kitegateway API */
-                        __( 'Payment failed: %s', 'kitegateway-woocommerce' ),
+                        __( 'Payment failed: %s', 'kitegateway-for-woocommerce' ),
                         esc_html( $message )
                     ),
                     'error'
@@ -570,7 +570,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
             }
 
             if ( $response_code === 200 || $response_code === 202 ) {
-                $order->update_status( apply_filters( 'woocommerce_kitegateway_process_payment_order_status', $order->has_downloadable_item() ? 'wc-invoiced' : 'processing', $order ), __( 'Payments pending.', 'kitegateway-woocommerce' ) );
+                $order->update_status( apply_filters( 'woocommerce_kitegateway_process_payment_order_status', $order->has_downloadable_item() ? 'wc-invoiced' : 'processing', $order ), __( 'Payments pending.', 'kitegateway-for-woocommerce' ) );
 
                 $payment_url = $collection_response_body->data->payment_url;
 
@@ -592,8 +592,8 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         // Verify nonce
         if ( ! isset( $_GET['kitegateway_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['kitegateway_nonce'] ) ), 'kitegateway_thankyou' ) ) {
-            wc_get_logger()->error( 'Kitegateway Thankyou Error: Invalid nonce', array( 'source' => 'kitegateway-woocommerce' ) );
-            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-woocommerce' ), 'error' );
+            wc_get_logger()->error( 'Kitegateway Thankyou Error: Invalid nonce', array( 'source' => 'kitegateway-for-woocommerce' ) );
+            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-for-woocommerce' ), 'error' );
             return;
         }
 
@@ -612,7 +612,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         if ( empty( $query_params['status'] ) ) {
             wc_get_logger()->debug(
                 'Kitegateway Thankyou: Missing payment status in query parameters: ' . wp_json_encode( $query_params ),
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
             return;
         }
@@ -622,21 +622,21 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
 
         wc_get_logger()->debug(
             'Kitegateway Thankyou: Order ID from query parameters: ' . $order_id,
-            array( 'source' => 'kitegateway-woocommerce' )
+            array( 'source' => 'kitegateway-for-woocommerce' )
         );
 
         wc_get_logger()->debug(
             'Kitegateway Thankyou: ID from query parameters: ' . $id,
-            array( 'source' => 'kitegateway-woocommerce' )
+            array( 'source' => 'kitegateway-for-woocommerce' )
         );
 
         // Verify order_id and key
         if ( $order_id != $id ) {
             wc_get_logger()->error(
                 'Kitegateway Thankyou Error: Invalid order_id or key',
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
-            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Invalid payment confirmation data.', 'kitegateway-for-woocommerce' ), 'error' );
             return;
         }
 
@@ -690,7 +690,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
          // Log webhook payload
         wc_get_logger()->debug(
             'Kitegateway Webhook Payload: ' . wp_json_encode( $payload ),
-            array( 'source' => 'kitegateway-woocommerce' )
+            array( 'source' => 'kitegateway-for-woocommerce' )
         );
 
         // Verify webhook signature using api_secret
@@ -717,20 +717,20 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         if(openssl_verify($strPayload, $signature, $publicKey, OPENSSL_ALGO_SHA512)) {
             wc_get_logger()->debug(
                 'Kitegateway Webhook: Signature verified successfully',
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
         } else {
             wc_get_logger()->error(
                 'Kitegateway Webhook Error: Invalid signature',
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
             wc_get_logger()->debug(
                 'Kitegateway Webhook signature: ' . wp_json_encode( $signature ),
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
             wc_get_logger()->debug(
                 'Kitegateway Webhook Payload: ' . wp_json_encode( $strPayload ),
-                array( 'source' => 'kitegateway-woocommerce' )
+                array( 'source' => 'kitegateway-for-woocommerce' )
             );
             status_header(401);
             wp_send_json(array('message' => 'Invalid webhook signature'));
@@ -744,7 +744,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
         if (!isset($order_id) || !isset($payload['transaction_status'])) {
             wc_get_logger()->error(
                 'Kitegateway Webhook Error: Invalid payload',
-                array('source' => 'kitegateway-woocommerce')
+                array('source' => 'kitegateway-for-woocommerce')
             );
             status_header(400);
             wp_send_json(array('message' => 'Invalid payload'));
@@ -757,11 +757,11 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
             wc_get_logger()->error(
                 sprintf(
                     /* translators: %1$s: source (Webhook or Redirect), %2$d: order ID */
-                    __( 'Kitegateway %1$s Error: Order not found for ID %2$d', 'kitegateway-woocommerce' ),
+                    __( 'Kitegateway %1$s Error: Order not found for ID %2$d', 'kitegateway-for-woocommerce' ),
                     'Webhook',
                     $order_id
                 ),
-                array('source' => 'kitegateway-woocommerce')
+                array('source' => 'kitegateway-for-woocommerce')
             );
             status_header(400);
             wp_send_json(array('message' => 'Invalid order'));
@@ -799,11 +799,11 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
             wc_get_logger()->error(
                 sprintf(
                     /* translators: %1$s: source (Webhook or Redirect), %2$d: order ID */
-                    __( 'Kitegateway %1$s Error: Order not found for ID %2$d', 'kitegateway-woocommerce' ),
+                    __( 'Kitegateway %1$s Error: Order not found for ID %2$d', 'kitegateway-for-woocommerce' ),
                     $source,
                     $order_id
                 ),
-                array('source' => 'kitegateway-woocommerce')
+                array('source' => 'kitegateway-for-woocommerce')
             );
             return;
         }
@@ -818,7 +818,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     $order->add_order_note(
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference */
-                            __( 'Payment completed via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment completed via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference
                         )
@@ -826,12 +826,12 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     wc_get_logger()->debug(
                         sprintf(
                             /* translators: %1$s: source, %2$d: order ID, %3$s: transaction reference */
-                            __( 'Kitegateway %1$s: Order %2$d marked as completed. Transaction Reference: %3$s', 'kitegateway-woocommerce' ),
+                            __( 'Kitegateway %1$s: Order %2$d marked as completed. Transaction Reference: %3$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $order_id,
                             $kitegateway_reference
                         ),
-                        array('source' => 'kitegateway-woocommerce')
+                        array('source' => 'kitegateway-for-woocommerce')
                     );
                 }
                 break;
@@ -843,7 +843,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                         'failed',
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference, %3$s: error message */
-                            __( 'Payment failed via Kitegateway (%1$s). Transaction Reference: %2$s. Message: %3$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment failed via Kitegateway (%1$s). Transaction Reference: %2$s. Message: %3$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference,
                             $message
@@ -852,7 +852,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     $order->add_order_note(
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference, %3$s: error message */
-                            __( 'Payment failed via Kitegateway (%1$s). Transaction Reference: %2$s. Message: %3$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment failed via Kitegateway (%1$s). Transaction Reference: %2$s. Message: %3$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference,
                             $message
@@ -861,11 +861,11 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     wc_get_logger()->debug(
                         sprintf(
                             /* translators: %1$s: source, %2$d: order ID */
-                            __( 'Kitegateway %1$s: Order %2$d marked as failed', 'kitegateway-woocommerce' ),
+                            __( 'Kitegateway %1$s: Order %2$d marked as failed', 'kitegateway-for-woocommerce' ),
                             $source,
                             $order_id
                         ),
-                        array('source' => 'kitegateway-woocommerce')
+                        array('source' => 'kitegateway-for-woocommerce')
                     );
                 }
                 break;
@@ -876,14 +876,14 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                         'refunded',
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect) */
-                            __( 'Payment refunded via Kitegateway (%1$s).', 'kitegateway-woocommerce' ),
+                            __( 'Payment refunded via Kitegateway (%1$s).', 'kitegateway-for-woocommerce' ),
                             $source
                         )
                     );
                     $order->add_order_note(
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference */
-                            __( 'Payment refunded via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment refunded via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference
                         )
@@ -891,12 +891,12 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     wc_get_logger()->debug(
                         sprintf(
                             /* translators: %1$s: source, %2$d: order ID, %3$s: transaction reference */
-                            __( 'Kitegateway %1$s: Order %2$d marked as refunded. Transaction Reference: %3$s', 'kitegateway-woocommerce' ),
+                            __( 'Kitegateway %1$s: Order %2$d marked as refunded. Transaction Reference: %3$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $order_id,
                             $kitegateway_reference
                         ),
-                        array('source' => 'kitegateway-woocommerce')
+                        array('source' => 'kitegateway-for-woocommerce')
                     );
                 }
                 break;
@@ -906,7 +906,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                         'on-hold',
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference */
-                            __( 'Payment pending via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment pending via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference
                         )
@@ -914,18 +914,18 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     $order->add_order_note(
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect) */
-                            __( 'Payment pending via Kitegateway (%1$s).', 'kitegateway-woocommerce' ),
+                            __( 'Payment pending via Kitegateway (%1$s).', 'kitegateway-for-woocommerce' ),
                             $source
                         )
                     );
                     wc_get_logger()->debug(
                         sprintf(
                             /* translators: %1$s: source, %2$d: order ID */
-                            __( 'Kitegateway %1$s: Order %2$d marked as on-hold', 'kitegateway-woocommerce' ),
+                            __( 'Kitegateway %1$s: Order %2$d marked as on-hold', 'kitegateway-for-woocommerce' ),
                             $source,
                             $order_id
                         ),
-                        array('source' => 'kitegateway-woocommerce')
+                        array('source' => 'kitegateway-for-woocommerce')
                     );
                 }
                 break;
@@ -935,7 +935,7 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                         'on-hold',
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect), %2$s: transaction reference */
-                            __( 'Payment pending via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-woocommerce' ),
+                            __( 'Payment pending via Kitegateway (%1$s). Transaction Reference: %2$s', 'kitegateway-for-woocommerce' ),
                             $source,
                             $kitegateway_reference
                         )
@@ -943,18 +943,18 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                     $order->add_order_note(
                         sprintf(
                             /* translators: %1$s: source (Webhook or Redirect) */
-                            __( 'Payment pending via Kitegateway (%1$s).', 'kitegateway-woocommerce' ),
+                            __( 'Payment pending via Kitegateway (%1$s).', 'kitegateway-for-woocommerce' ),
                             $source
                         )
                     );
                     wc_get_logger()->debug(
                         sprintf(
                             /* translators: %1$s: source, %2$d: order ID */
-                            __( 'Kitegateway %1$s: Order %2$d marked as on-hold', 'kitegateway-woocommerce' ),
+                            __( 'Kitegateway %1$s: Order %2$d marked as on-hold', 'kitegateway-for-woocommerce' ),
                             $source,
                             $order_id
                         ),
-                        array('source' => 'kitegateway-woocommerce')
+                        array('source' => 'kitegateway-for-woocommerce')
                     );
                 }
                 break;    
@@ -962,18 +962,18 @@ class WC_Gateway_Kitegateway extends WC_Payment_Gateway {
                 wc_get_logger()->error(
                     sprintf(
                         /* translators: %1$s: payment status, %2$d: order ID, %3$s: source */
-                        __( 'Kitegateway %3$s Error: Unknown payment status: %1$s for order %2$d', 'kitegateway-woocommerce' ),
+                        __( 'Kitegateway %3$s Error: Unknown payment status: %1$s for order %2$d', 'kitegateway-for-woocommerce' ),
                         $payment_status,
                         $order_id,
                         $source
                     ),
-                    array('source' => 'kitegateway-woocommerce')
+                    array('source' => 'kitegateway-for-woocommerce')
                 );
                 if ($source === 'Redirect') {
                     wc_add_notice(
                         sprintf(
                             /* translators: %s: payment status */
-                            __( 'Unknown payment status: %s', 'kitegateway-woocommerce' ),
+                            __( 'Unknown payment status: %s', 'kitegateway-for-woocommerce' ),
                             esc_html( $payment_status )
                         ),
                         'error'

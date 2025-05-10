@@ -30,7 +30,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
         'card_number',
         array(
             'type'        => 'text',
-            'label'       => __( 'Card Number', 'kitegateway-woocommerce' ),
+            'label'       => __( 'Card Number', 'kitegateway-for-woocommerce' ),
             'class'       => array( 'form-row', 'form-row-wide' ),
             'required'    => true,
             'maxlength'   => 19,
@@ -45,7 +45,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
         'cvv',
         array(
             'type'        => 'text',
-            'label'       => __( 'CVV', 'kitegateway-woocommerce' ),
+            'label'       => __( 'CVV', 'kitegateway-for-woocommerce' ),
             'class'       => array( 'form-row', 'form-row-wide', 'kitegateway-cvv' ),
             'required'    => true,
             'maxlength'   => 4,
@@ -60,7 +60,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
         'expiry_month',
         array(
             'type'        => 'text',
-            'label'       => __( 'Expiry Month', 'kitegateway-woocommerce' ),
+            'label'       => __( 'Expiry Month', 'kitegateway-for-woocommerce' ),
             'class'       => array( 'form-row', 'form-row-wide' ),
             'required'    => true,
             'maxlength'   => 2,
@@ -76,7 +76,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
         'expiry_year',
         array(
             'type'        => 'text',
-            'label'       => __( 'Expiry Year', 'kitegateway-woocommerce' ),
+            'label'       => __( 'Expiry Year', 'kitegateway-for-woocommerce' ),
             'class'       => array( 'form-row', 'form-row-wide' ),
             'required'    => true,
             'maxlength'   => 4,
@@ -100,7 +100,7 @@ function kitegateway_description_fields( $description, $payment_id ) {
  */
 function kitegateway_description_fields_validation() {
     if ( ! isset( $_POST['kitegateway_checkout_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kitegateway_checkout_nonce'] ) ), 'kitegateway_checkout_nonce' ) ) {
-        wc_add_notice( __( 'Security check failed. Please try again.', 'kitegateway-woocommerce' ), 'error' );
+        wc_add_notice( __( 'Security check failed. Please try again.', 'kitegateway-for-woocommerce' ), 'error' );
         return;
     }
 
@@ -113,35 +113,35 @@ function kitegateway_description_fields_validation() {
 
         // Validate card number
         if ( empty( trim( $card_number ) ) ) {
-            wc_add_notice( __( 'Please enter a valid card number.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Please enter a valid card number.', 'kitegateway-for-woocommerce' ), 'error' );
         } elseif ( ! preg_match( '/^[0-9]{13,19}$/', $card_number ) ) {
-            wc_add_notice( __( 'Card number must be 13 to 19 digits.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Card number must be 13 to 19 digits.', 'kitegateway-for-woocommerce' ), 'error' );
         }
 
         // Validate CVV
         if ( empty( trim( $cvv ) ) ) {
-            wc_add_notice( __( 'Please enter a valid CVV.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Please enter a valid CVV.', 'kitegateway-for-woocommerce' ), 'error' );
         } elseif ( ! preg_match( '/^[0-9]{3,4}$/', $cvv ) ) {
-            wc_add_notice( __( 'CVV must be 3 or 4 digits.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'CVV must be 3 or 4 digits.', 'kitegateway-for-woocommerce' ), 'error' );
         }
 
         // Validate expiry month
         if ( empty( trim( $expiry_month ) ) ) {
-            wc_add_notice( __( 'Please enter a valid expiry month.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Please enter a valid expiry month.', 'kitegateway-for-woocommerce' ), 'error' );
         } elseif ( ! preg_match( '/^(0[1-9]|1[0-2])$/', $expiry_month ) ) {
-            wc_add_notice( __( 'Expiry month must be between 01 and 12.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Expiry month must be between 01 and 12.', 'kitegateway-for-woocommerce' ), 'error' );
         }
 
         // Validate expiry year
         if ( empty( trim( $expiry_year ) ) ) {
-            wc_add_notice( __( 'Please enter a valid expiry year.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Please enter a valid expiry year.', 'kitegateway-for-woocommerce' ), 'error' );
         } elseif ( ! preg_match( '/^[0-9]{4}$/', $expiry_year ) ) {
-            wc_add_notice( __( 'Expiry year must be a 4-digit number.', 'kitegateway-woocommerce' ), 'error' );
+            wc_add_notice( __( 'Expiry year must be a 4-digit number.', 'kitegateway-for-woocommerce' ), 'error' );
         } else {
             $current_year = (int) gmdate( 'Y' );
             $expiry_year = (int) $expiry_year;
             if ( $expiry_year < $current_year ) {
-                wc_add_notice( __( 'Expiry year cannot be in the past.', 'kitegateway-woocommerce' ), 'error' );
+                wc_add_notice( __( 'Expiry year cannot be in the past.', 'kitegateway-for-woocommerce' ), 'error' );
             }
         }
     }

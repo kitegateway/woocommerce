@@ -3,12 +3,12 @@
  * Plugin Name: Kitegateway for WooCommerce
  * Plugin URI: https://kitegateway.com
  * Author: Kitegateway Developers
- * Author URI: https://kitegateway.com
+ * Author URI: https://github.com/kitegateway/woocommerce
  * Description: A fast and secure gateway for accepting digital payments in WooCommerce.
  * Version: 1.0.0
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: kitegateway-woocommerce
+ * Text Domain: kitegateway-for-woocommerce
  *
  * Class WC_Gateway_Kitegateway file.
  *
@@ -57,7 +57,7 @@ function add_to_woo_kitegateway_payment_gateway( $gateways ) {
  * @return array Updated list of currencies.
  */
 function kitegateway_add_ugx_currencies( $currencies ) {
-    $currencies['UGX'] = __( 'Ugandan Shillings', 'kitegateway-woocommerce' );
+    $currencies['UGX'] = __( 'Ugandan Shillings', 'kitegateway-for-woocommerce' );
     return $currencies;
 }
 
