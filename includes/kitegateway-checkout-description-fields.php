@@ -1,13 +1,21 @@
 <?php
-
+/**
+ * Add custom fields to the Kitegateway checkout description and handle validation.
+ *
+ * @package Kitegateway Woocommerce
+ */
 add_filter( 'woocommerce_gateway_description', 'kitegateway_description_fields', 20, 2 );
 add_action( 'woocommerce_checkout_process', 'kitegateway_description_fields_validation' );
 add_action( 'woocommerce_checkout_update_order_meta', 'checkout_update_order_meta', 10, 1 );
-// add_action( 'woocommerce_admin_order_data_after_billing_address', 'order_data_after_billing_address', 10, 1 );
-// add_action( 'woocommerce_order_item_meta_end', 'order_item_meta_end', 10, 3 );
 
+/**
+ * Add custom fields to the Kitegateway payment gateway description.
+ *
+ * @param string $description The default description.
+ * @param string $payment_id The payment gateway ID.
+ * @return string Updated description with fields.
+ */
 function kitegateway_description_fields( $description, $payment_id ) {
-
     if ( 'kitegateway' !== $payment_id ) {
         return $description;
     }
@@ -15,46 +23,69 @@ function kitegateway_description_fields( $description, $payment_id ) {
     ob_start();
 
     echo '<div style="display: block; width:300px; height:auto;">';
-    // echo '<img src="' . plugins_url('../assets/icon.png', __FILE__ ) . '">';
+    // echo '<img src="' . esc_url( plugins_url( '../assets/icon.png', __FILE__ ) ) . '">';
 
+    wp_nonce_field( 'kitegateway_checkout_nonce', 'kitegateway_checkout_nonce' );
 
     woocommerce_form_field(
         'card_number',
         array(
-            'type' => 'text',
-            'label' =>__( 'Card Number', 'kitegateway-payments-woo' ),
-            'class' => array( 'form-row', 'form-row-wide' ),
-            'required' => true,
+            'type'        => 'text',
+            'label'       => __( 'Card Number', 'kitegateway-woocommerce' ),
+            'class'       => array( 'form-row', 'form-row-wide' ),
+            'required'    => true,
+            'maxlength'   => 19,
+            'custom_attributes' => array(
+                'autocomplete' => 'cc-number',
+                'pattern'      => '[0-9]{13,19}',
+            ),
         )
     );
 
     woocommerce_form_field(
         'cvv',
         array(
-            'type' => 'text',
-            'label' =>__( 'CVV', 'kitegateway-payments-woo' ),
-            'class' => array( 'form-row', 'form-row-wide' ),
-            'required' => true,
+            'type'        => 'text',
+            'label'       => __( 'CVV', 'kitegateway-woocommerce' ),
+            'class'       => array( 'form-row', 'form-row-wide', 'kitegateway-cvv' ),
+            'required'    => true,
+            'maxlength'   => 4,
+            'custom_attributes' => array(
+                'autocomplete' => 'cc-csc',
+                'pattern'      => '[0-9]{3,4}',
+            ),
         )
     );
 
     woocommerce_form_field(
         'expiry_month',
         array(
-            'type' => 'text',
-            'label' =>__( 'Expiry Month', 'kitegateway-payments-woo' ),
-            'class' => array( 'form-row', 'form-row-wide' ),
-            'required' => true,
+            'type'        => 'text',
+            'label'       => __( 'Expiry Month', 'kitegateway-woocommerce' ),
+            'class'       => array( 'form-row', 'form-row-wide' ),
+            'required'    => true,
+            'maxlength'   => 2,
+            'custom_attributes' => array(
+                'autocomplete' => 'cc-exp-month',
+                'pattern'      => '(0[1-9]|1[0-2])',
+                'placeholder'  => 'MM',
+            ),
         )
     );
 
     woocommerce_form_field(
         'expiry_year',
         array(
-            'type' => 'text',
-            'label' =>__( 'Expiry Year', 'kitegateway-payments-woo' ),
-            'class' => array( 'form-row', 'form-row-wide' ),
-            'required' => true,
+            'type'        => 'text',
+            'label'       => __( 'Expiry Year', 'kitegateway-woocommerce' ),
+            'class'       => array( 'form-row', 'form-row-wide' ),
+            'required'    => true,
+            'maxlength'   => 4,
+            'custom_attributes' => array(
+                'autocomplete' => 'cc-exp-year',
+                'pattern'      => '[0-9]{2}',
+                'placeholder'  => 'YYYY',
+            ),
         )
     );
 
@@ -65,9 +96,50 @@ function kitegateway_description_fields( $description, $payment_id ) {
     return $description;
 }
 
+
+/**
+ * Validate Kitegateway checkout fields.
+ */
 function kitegateway_description_fields_validation() {
-    if( 'kitegateway' === $_POST['payment_method'] && ! isset( $_POST['card_number'] )  || empty( $_POST['card_number'] ) ) {
-        wc_add_notice( 'Please enter a number that is to be billed', 'error' );
+    if ( ! isset( $_POST['kitegateway_checkout_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kitegateway_checkout_nonce'] ) ), 'kitegateway_checkout_nonce' ) ) {
+        wc_add_notice( __( 'Security check failed. Please try again.', 'kitegateway-woocommerce' ), 'error' );
+        return;
+    }
+
+    if ( isset( $_POST['payment_method'] ) && 'kitegateway' === sanitize_text_field( wp_unslash( $_POST['payment_method'] ) ) ) {
+        // Validate card number
+        if ( ! isset( $_POST['card_number'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) ) ) ) {
+            wc_add_notice( __( 'Please enter a valid card number.', 'kitegateway-woocommerce' ), 'error' );
+        } elseif ( ! preg_match( '/^[0-9]{13,19}$/', sanitize_text_field( wp_unslash( $_POST['card_number'] ) ) ) ) {
+            wc_add_notice( __( 'Card number must be 13 to 19 digits.', 'kitegateway-woocommerce' ), 'error' );
+        }
+
+        // Validate CVV
+        if ( ! isset( $_POST['cvv'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) ) ) ) {
+            wc_add_notice( __( 'Please enter a valid CVV.', 'kitegateway-woocommerce' ), 'error' );
+        } elseif ( ! preg_match( '/^[0-9]{3,4}$/', sanitize_text_field( wp_unslash( $_POST['cvv'] ) ) ) ) {
+            wc_add_notice( __( 'CVV must be 3 or 4 digits.', 'kitegateway-woocommerce' ), 'error' );
+        }
+
+        // Validate expiry month
+        if ( ! isset( $_POST['expiry_month'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) ) ) ) {
+            wc_add_notice( __( 'Please enter a valid expiry month.', 'kitegateway-woocommerce' ), 'error' );
+        } elseif ( ! preg_match( '/^(0[1-9]|1[0-2])$/', sanitize_text_field( wp_unslash( $_POST['expiry_month'] ) ) ) ) {
+            wc_add_notice( __( 'Expiry month must be between 01 and 12.', 'kitegateway-woocommerce' ), 'error' );
+        }
+
+        // Validate expiry year
+        if ( ! isset( $_POST['expiry_year'] ) || empty( trim( sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) ) ) ) {
+            wc_add_notice( __( 'Please enter a valid expiry year.', 'kitegateway-woocommerce' ), 'error' );
+        } elseif ( ! preg_match( '/^[0-9]{2}$/', sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) ) ) ) {
+            wc_add_notice( __( 'Expiry year must be a 2-digit number.', 'kitegateway-woocommerce' ), 'error' );
+        } else {
+            $current_year = (int) date( 'y' );
+            $expiry_year = (int) sanitize_text_field( wp_unslash( $_POST['expiry_year'] ) );
+            if ( $expiry_year < $current_year ) {
+                wc_add_notice( __( 'Expiry year cannot be in the past.', 'kitegateway-woocommerce' ), 'error' );
+            }
+        }
     }
 }
 
@@ -80,11 +152,3 @@ function checkout_update_order_meta( $order_id ) {
         update_post_meta( $order_id, 'card_number', $_POST['card_number'] );
     }
 }
-
-/*function order_data_after_billing_address( $order ) {
-    echo '<p><strong>' . __( 'Card Number:', 'kitegateway-payments-woo' ) . '</strong><br>' . get_post_meta( $order->get_id(), 'card_number', true ) . '</p>';
-}*/
-
-/*function order_item_meta_end( $item_id, $item, $order ) {
-    echo '<p><strong>' . __( 'Card Number:', 'kitegateway-payments-woo' ) . '</strong><br>' . get_post_meta( $order->get_id(), 'card_number', true ) . '</p>';
-}*/
