@@ -91,14 +91,28 @@ final class WC_Kitegateway_Blocks_Support extends AbstractPaymentMethodType {
 	 * Returns an array of key => value pairs of data made available to the
 	 * payment methods script.
 	 *
+	 * Note: the classic gateway's "description" option (exposed via
+	 * WC_Gateway_Kitegateway::get_description()) contains raw HTML
+	 * (card fields rendered via woocommerce_form_field(), injected
+	 * through the woocommerce_gateway_description filter in
+	 * includes/kitegateway-checkout-description-fields.php). That
+	 * markup is meant for the classic, server-rendered checkout only.
+	 * We deliberately do NOT pass it through here, since the block
+	 * checkout renders this data as plain text/React children, not
+	 * raw HTML. Instead the block-side fields are rendered as real
+	 * React inputs (see assets/blocks/kitegateway-blocks.js) and we
+	 * only expose the plain merchant-configured description plus a
+	 * fresh nonce the fields can submit as payment_data.
+	 *
 	 * @return array
 	 */
 	public function get_payment_method_data() {
 		return array(
-			'title'       => $this->gateway ? $this->gateway->get_title() : __( 'Kitegateway Woocommerce', 'kitegateway-for-woocommerce' ),
-			'description' => $this->gateway ? $this->gateway->get_description() : '',
-			'icon'        => $this->gateway ? $this->gateway->icon : '',
-			'supports'    => $this->gateway ? array_filter( $this->gateway->supports, array( $this->gateway, 'supports' ) ) : array(),
+			'title'         => $this->gateway ? $this->gateway->get_title() : __( 'Kitegateway Woocommerce', 'kitegateway-for-woocommerce' ),
+			'description'   => $this->gateway ? $this->gateway->get_option( 'description' ) : '',
+			'icon'          => $this->gateway ? $this->gateway->icon : '',
+			'supports'      => $this->gateway ? array_filter( $this->gateway->supports, array( $this->gateway, 'supports' ) ) : array(),
+			'checkoutNonce' => wp_create_nonce( 'kitegateway_checkout_nonce' ),
 		);
 	}
 }
