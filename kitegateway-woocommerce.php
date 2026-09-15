@@ -5,7 +5,7 @@
  * Author: Kitegateway Developers
  * Author URI: https://github.com/kitegateway/woocommerce
  * Description: A fast and secure gateway for accepting digital payments in WooCommerce.
- * Version: 1.0.1
+ * Version: 1.1.0
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: kitegateway-for-woocommerce
@@ -23,10 +23,39 @@ if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins',
     return;
 }
 
+define( 'KITEGATEWAY_PLUGIN_FILE', __FILE__ );
+define( 'KITEGATEWAY_PLUGIN_VERSION', '1.1.0' );
+
 add_action( 'plugins_loaded', 'kitegateway_payment_init', 11 );
 add_filter( 'woocommerce_currencies', 'kitegateway_add_ugx_currencies' );
 add_filter( 'woocommerce_currency_symbol', 'kitegateway_add_ugx_currencies_symbol', 10, 2 );
 add_filter( 'woocommerce_payment_gateways', 'add_to_woo_kitegateway_payment_gateway' );
+
+/**
+ * Declare compatibility with WooCommerce features (HPOS, Blocks).
+ */
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
+		}
+	}
+);
+
+/**
+ * Register the Kitegateway payment method with the WooCommerce
+ * Checkout block (Cart & Checkout Blocks), so it is no longer
+ * limited to the legacy [woocommerce_checkout] shortcode checkout.
+ */
+add_action(
+	'woocommerce_blocks_payment_method_type_registration',
+	function ( \Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+		require_once plugin_dir_path( __FILE__ ) . 'includes/blocks/class-wc-kitegateway-blocks-support.php';
+		$payment_method_registry->register( new WC_Kitegateway_Blocks_Support() );
+	}
+);
 
 /**
  * Initialize the Kitegateway payment gateway.
