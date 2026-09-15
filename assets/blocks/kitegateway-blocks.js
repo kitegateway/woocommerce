@@ -86,12 +86,27 @@
 			[]
 		);
 
+		// Plain static label rendered above the input, never overlapping it
+		// (this is intentionally NOT the wc-block-components-text-input
+		// floating-label pattern: that class name only positions correctly
+		// alongside WooCommerce core's own stylesheet, which this plugin
+		// does not load, so reusing the class name left the label stacked
+		// directly on top of the input's text).
 		return createElement(
 			'div',
-			{ className: 'wc-block-components-text-input kitegateway-field', style: { marginBottom: '8px' } },
+			{ className: 'kitegateway-field', style: { marginBottom: '8px' } },
 			createElement(
 				'label',
-				{ htmlFor: props.id, style: { display: 'block', marginBottom: '4px' } },
+				{
+					htmlFor: props.id,
+					style: {
+						display: 'block',
+						marginBottom: '4px',
+						fontSize: '0.875em',
+						fontWeight: 600,
+						lineHeight: 1.4,
+					},
+				},
 				props.label,
 				props.required
 					? createElement( 'span', { style: { color: '#cc1818' } }, ' *' )
@@ -108,7 +123,15 @@
 				maxLength: props.maxLength,
 				placeholder: props.placeholder,
 				required: !! props.required,
-				style: { width: '100%', padding: '8px', boxSizing: 'border-box' },
+				style: {
+					display: 'block',
+					width: '100%',
+					padding: '8px',
+					boxSizing: 'border-box',
+					lineHeight: 'normal',
+					background: '#fff',
+					position: 'static',
+				},
 				onChange: function ( event ) {
 					props.onChange( event.target.value );
 				},
