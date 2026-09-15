@@ -36,12 +36,21 @@
 	function Field( props ) {
 		var inputRef = wp.element.useRef( null );
 
-		// Native-level fallback for browser/password-manager autofill.
+		// Keep a live ref to the latest props so the native listener below
+		// never needs to re-bind on every keystroke (re-binding on every
+		// value change was fighting normal typing and made the field look
+		// like it never updated, i.e. the label/placeholder never seemed
+		// to clear).
+		var propsRef = wp.element.useRef( props );
+		propsRef.current = props;
+
+		// Native-level fallback for browser/password-manager autofill only.
 		// Some browsers write the autofilled value straight into the DOM
-		// and only fire a native 'input'/'change' event, which can leave
-		// a React controlled input's state out of sync. Listening at the
-		// DOM level guarantees autofilled values are captured even when
-		// React's synthetic onChange does not fire for them.
+		// without ever going through React's synthetic onChange. This effect
+		// runs once per field (mount/unmount only) and always reads the
+		// current value/onChange via propsRef, so it never interferes with
+		// normal typing, which already goes through the input's own
+		// onChange handler below.
 		useEffect(
 			function () {
 				var node = inputRef.current;
@@ -49,29 +58,32 @@
 					return;
 				}
 
-				function handleNativeInput( event ) {
-					if ( event.target.value !== props.value ) {
-						props.onChange( event.target.value );
+				function syncFromNode( node ) {
+					if ( node.value !== propsRef.current.value ) {
+						propsRef.current.onChange( node.value );
 					}
 				}
 
-				node.addEventListener( 'input', handleNativeInput );
-				node.addEventListener( 'change', handleNativeInput );
-				// Autofill can land slightly after mount with no event in
-				// some browsers; re-check shortly after the field appears.
+				// 'change' (not 'input') is the event most browsers fire for
+				// autofill; normal typing already flows through React's
+				// onChange, so we do not also listen for 'input' here.
+				function handleNativeChange( event ) {
+					syncFromNode( event.target );
+				}
+
+				node.addEventListener( 'change', handleNativeChange );
+				// Autofill can land slightly after mount with no event at all
+				// in some browsers; re-check shortly after the field appears.
 				var recheck = setTimeout( function () {
-					if ( node.value && node.value !== props.value ) {
-						props.onChange( node.value );
-					}
+					syncFromNode( node );
 				}, 500 );
 
 				return function () {
-					node.removeEventListener( 'input', handleNativeInput );
-					node.removeEventListener( 'change', handleNativeInput );
+					node.removeEventListener( 'change', handleNativeChange );
 					clearTimeout( recheck );
 				};
 			},
-			[ props.value ]
+			[]
 		);
 
 		return createElement(
