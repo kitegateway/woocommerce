@@ -34,6 +34,46 @@
 	 * checkout form rows.
 	 */
 	function Field( props ) {
+		var inputRef = wp.element.useRef( null );
+
+		// Native-level fallback for browser/password-manager autofill.
+		// Some browsers write the autofilled value straight into the DOM
+		// and only fire a native 'input'/'change' event, which can leave
+		// a React controlled input's state out of sync. Listening at the
+		// DOM level guarantees autofilled values are captured even when
+		// React's synthetic onChange does not fire for them.
+		useEffect(
+			function () {
+				var node = inputRef.current;
+				if ( ! node ) {
+					return;
+				}
+
+				function handleNativeInput( event ) {
+					if ( event.target.value !== props.value ) {
+						props.onChange( event.target.value );
+					}
+				}
+
+				node.addEventListener( 'input', handleNativeInput );
+				node.addEventListener( 'change', handleNativeInput );
+				// Autofill can land slightly after mount with no event in
+				// some browsers; re-check shortly after the field appears.
+				var recheck = setTimeout( function () {
+					if ( node.value && node.value !== props.value ) {
+						props.onChange( node.value );
+					}
+				}, 500 );
+
+				return function () {
+					node.removeEventListener( 'input', handleNativeInput );
+					node.removeEventListener( 'change', handleNativeInput );
+					clearTimeout( recheck );
+				};
+			},
+			[ props.value ]
+		);
+
 		return createElement(
 			'div',
 			{ className: 'wc-block-components-text-input kitegateway-field', style: { marginBottom: '8px' } },
@@ -46,6 +86,7 @@
 					: null
 			),
 			createElement( 'input', {
+				ref: inputRef,
 				type: 'text',
 				inputMode: props.inputMode || 'text',
 				id: props.id,
@@ -76,24 +117,35 @@
 		var cardNumber = cardState[ 0 ];
 		var setCardNumber = cardState[ 1 ];
 
-		var monthState = useState( '' );
-		var expiryMonth = monthState[ 0 ];
-		var setExpiryMonth = monthState[ 1 ];
-
-		var yearState = useState( '' );
-		var expiryYear = yearState[ 0 ];
-		var setExpiryYear = yearState[ 1 ];
+		var expiryState = useState( '' );
+		var expiry = expiryState[ 0 ];
+		var setExpiry = expiryState[ 1 ];
 
 		var cvvState = useState( '' );
 		var cvv = cvvState[ 0 ];
 		var setCvv = cvvState[ 1 ];
 
+		/**
+		 * Splits the combined "MM / YYYY" (or any digits typed/autofilled
+		 * into it) expiry value into month/year, tolerating a 2-digit year.
+		 */
+		function splitExpiry( value ) {
+			var digits = ( value || '' ).replace( /[^0-9]/g, '' );
+			var month = digits.slice( 0, 2 );
+			var year = digits.slice( 2, 6 );
+			if ( year.length === 2 ) {
+				year = ( year < '70' ? '20' : '19' ) + year;
+			}
+			return { month: month, year: year };
+		}
+
 		useEffect(
 			function () {
 				var unsubscribe = onPaymentSetup( function () {
+					var parsedExpiry = splitExpiry( expiry );
 					var isCardValid = /^[0-9]{13,19}$/.test( cardNumber );
-					var isMonthValid = /^(0[1-9]|1[0-2])$/.test( expiryMonth );
-					var isYearValid = /^[0-9]{4}$/.test( expiryYear );
+					var isMonthValid = /^(0[1-9]|1[0-2])$/.test( parsedExpiry.month );
+					var isYearValid = /^[0-9]{4}$/.test( parsedExpiry.year );
 					var isCvvValid = /^[0-9]{3,4}$/.test( cvv );
 
 					if ( ! isCardValid || ! isMonthValid || ! isYearValid || ! isCvvValid ) {
@@ -113,8 +165,8 @@
 								payment_method: 'kitegateway',
 								kitegateway_checkout_nonce: settings.checkoutNonce || '',
 								card_number: cardNumber,
-								expiry_month: expiryMonth,
-								expiry_year: expiryYear,
+								expiry_month: parsedExpiry.month,
+								expiry_year: parsedExpiry.year,
 								cvv: cvv,
 							},
 						},
@@ -123,7 +175,7 @@
 
 				return unsubscribe;
 			},
-			[ onPaymentSetup, cardNumber, expiryMonth, expiryYear, cvv, emitResponse.responseTypes.SUCCESS, emitResponse.responseTypes.ERROR ]
+			[ onPaymentSetup, cardNumber, expiry, cvv, emitResponse.responseTypes.SUCCESS, emitResponse.responseTypes.ERROR ]
 		);
 
 		return createElement(
@@ -148,30 +200,19 @@
 				createElement(
 					'div',
 					{ style: { flex: 1 } },
+					// Single combined expiry field: browsers/password managers key
+					// saved-card autofill detection on autoComplete="cc-exp"; a
+					// split month/year pair is not reliably recognised and also
+					// caused the MM/YYYY placeholders to clash with entered values.
 					createElement( Field, {
-						id: 'kitegateway-expiry-month',
-						label: __( 'Expiry Month', 'kitegateway-for-woocommerce' ),
-						value: expiryMonth,
-						onChange: setExpiryMonth,
-						autoComplete: 'cc-exp-month',
+						id: 'kitegateway-expiry',
+						label: __( 'Expiry Date', 'kitegateway-for-woocommerce' ),
+						value: expiry,
+						onChange: setExpiry,
+						autoComplete: 'cc-exp',
 						inputMode: 'numeric',
-						maxLength: 2,
-						placeholder: 'MM',
-						required: true,
-					} )
-				),
-				createElement(
-					'div',
-					{ style: { flex: 1 } },
-					createElement( Field, {
-						id: 'kitegateway-expiry-year',
-						label: __( 'Expiry Year', 'kitegateway-for-woocommerce' ),
-						value: expiryYear,
-						onChange: setExpiryYear,
-						autoComplete: 'cc-exp-year',
-						inputMode: 'numeric',
-						maxLength: 4,
-						placeholder: 'YYYY',
+						maxLength: 7,
+						placeholder: 'MM / YYYY',
 						required: true,
 					} )
 				),
