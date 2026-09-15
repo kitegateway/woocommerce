@@ -56,43 +56,113 @@ function kitegateway_description_fields( $description, $payment_id ) {
         )
     );
 
+    // A single combined expiry field (MM / YYYY) is used instead of two
+    // separate Month/Year inputs. Browsers and password managers key their
+    // saved-card autofill on a single field with autocomplete="cc-exp";
+    // splitting it into cc-exp-month/cc-exp-year defeats that detection on
+    // most browsers and also caused the visible placeholder ("MM"/"YYYY")
+    // to visually clash with typed or autofilled values. expiry_month and
+    // expiry_year are still submitted as hidden fields, kept in sync by JS,
+    // so the existing server-side processing is unchanged.
     woocommerce_form_field(
-        'expiry_month',
+        'kitegateway_expiry',
         array(
             'type'        => 'text',
-            'label'       => __( 'Expiry Month', 'kitegateway-for-woocommerce' ),
+            'label'       => __( 'Expiry Date', 'kitegateway-for-woocommerce' ),
             'class'       => array( 'form-row', 'form-row-wide' ),
             'required'    => true,
-            'maxlength'   => 2,
+            'maxlength'   => 7,
             'custom_attributes' => array(
-                'autocomplete' => 'cc-exp-month',
-                'pattern'      => '(0[1-9]|1[0-2])',
-                'placeholder'  => 'MM',
+                'autocomplete' => 'cc-exp',
+                'inputmode'    => 'numeric',
+                'placeholder'  => 'MM / YYYY',
+                'id'           => 'kitegateway_expiry',
             ),
         )
     );
 
-    woocommerce_form_field(
-        'expiry_year',
-        array(
-            'type'        => 'text',
-            'label'       => __( 'Expiry Year', 'kitegateway-for-woocommerce' ),
-            'class'       => array( 'form-row', 'form-row-wide' ),
-            'required'    => true,
-            'maxlength'   => 4,
-            'custom_attributes' => array(
-                'autocomplete' => 'cc-exp-year',
-                'pattern'      => '[0-9]{4}',
-                'placeholder'  => 'YYYY',
-            ),
-        )
-    );
+    echo '<input type="hidden" name="expiry_month" id="kitegateway_expiry_month" value="" />';
+    echo '<input type="hidden" name="expiry_year" id="kitegateway_expiry_year" value="" />';
 
     echo '</div>';
 
     $description .= ob_get_clean();
+    $description .= kitegateway_expiry_split_script();
 
     return $description;
+}
+
+/**
+ * Inline script that keeps the combined MM / YYYY expiry field in sync
+ * with the hidden expiry_month / expiry_year fields the backend expects.
+ * Listens for both manual typing and browser/password-manager autofill
+ * (which sets the value programmatically and only fires an `input`
+ * event, not `keyup`), so saved-card autofill is picked up correctly.
+ *
+ * @return string Script tag markup.
+ */
+function kitegateway_expiry_split_script() {
+    ob_start();
+    ?>
+    <script>
+    ( function () {
+        function splitExpiry() {
+            var field = document.getElementById( 'kitegateway_expiry' );
+            var monthField = document.getElementById( 'kitegateway_expiry_month' );
+            var yearField = document.getElementById( 'kitegateway_expiry_year' );
+            if ( ! field || ! monthField || ! yearField ) {
+                return;
+            }
+
+            var raw = field.value.replace( /[^0-9]/g, '' );
+            var month = raw.slice( 0, 2 );
+            var year = raw.slice( 2, 6 );
+            if ( year.length === 2 ) {
+                // Some autofill implementations provide a 2-digit year.
+                year = ( year < '70' ? '20' : '19' ) + year;
+            }
+
+            monthField.value = month;
+            yearField.value = year;
+        }
+
+        function bind() {
+            var field = document.getElementById( 'kitegateway_expiry' );
+            if ( ! field ) {
+                return;
+            }
+            // 'input' covers typing; also covers most browser autofill.
+            field.addEventListener( 'input', splitExpiry );
+            field.addEventListener( 'change', splitExpiry );
+            // Autofill sometimes lands before listeners attach; re-check shortly after paint.
+            setTimeout( splitExpiry, 300 );
+            setTimeout( splitExpiry, 1000 );
+            splitExpiry();
+        }
+
+        if ( document.readyState === 'loading' ) {
+            document.addEventListener( 'DOMContentLoaded', bind );
+        } else {
+            bind();
+        }
+        // Re-bind after WooCommerce re-renders the checkout (e.g. on payment method switch).
+        document.body.addEventListener( 'updated_checkout', bind );
+
+        // Guard against a submit landing before the input/change listeners
+        // or timers have a chance to run (e.g. immediately after autofill).
+        document.body.addEventListener( 'click', function ( event ) {
+            if ( event.target && event.target.closest && event.target.closest( '#place_order' ) ) {
+                splitExpiry();
+            }
+        }, true );
+        var checkoutForm = document.querySelector( 'form.woocommerce-checkout' );
+        if ( checkoutForm ) {
+            checkoutForm.addEventListener( 'submit', splitExpiry, true );
+        }
+    } )();
+    </script>
+    <?php
+    return ob_get_clean();
 }
 
 /**
